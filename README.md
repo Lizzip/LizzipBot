@@ -1,2 +1,2 @@
 # LizzipBot
- Discord bot with IRC and Tumblr integration
+Discord bot with IRC and Tumblr integration
