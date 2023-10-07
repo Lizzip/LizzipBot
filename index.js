@@ -44,6 +44,7 @@ const irc = require('irc');
 const ircChannel = config.irc.channel;
 const ircClient = new irc.Client(config.irc.server, config.irc.username, {
     channels: [ircChannel],
+	port: config.irc.port
 });
 ircClient.addListener('error', message => console.log('error: ', message));
 
