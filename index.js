@@ -1,5 +1,6 @@
 'use strict';
 const fs = require("fs");
+const http =  require("https")
 
 
 // Load config
@@ -14,6 +15,8 @@ const dingImgLoc = "./ding/dingdingding.png";
 
 // Setup Tumblr
 const dingBlog = config.tumblr.blog;
+const topicBlog = config.tumblr.topics;
+const randomTopic = config.tumblr.random_topics;
 const tumblr = require('tumblr.js');
 const tumblrClient = tumblr.createClient({
   consumer_key: config.tumblr.consumer_key,
@@ -79,12 +82,18 @@ discClient.on('messageCreate', message => {
     //Get messages from the discord channels
     if(discordChannels.includes(message.channel.id)){
 
-        // TOPIC
-        if(msg.startsWith("/topic ")){
+        // SET TOPIC IN IRC
+        if(msg.startsWith("/topic ") || msg.startsWith(".topic ")){
             let t = message.content;
             t = t.substring(6).trim();
             ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
+        }
+		
+		// GET RANDOM PAST TOPIC FROM TUMBLR
+		if(msg.startsWith(".random")){
+			console.log("Getting random topic");
+			getRandomTopic(message.channel)
         }
 
         // MARKOV
@@ -130,6 +139,8 @@ discClient.on('messageReactionAdd', (reaction, user) => {
 
     const name = reaction._emoji.name;
     const id = reaction._emoji.id;
+
+    //console.log(reaction.message.reactions.cache)
 
     if(name === "topic"){
         let t = removeUsername(reaction.message.content);
@@ -180,3 +191,36 @@ const postDing = function(dingText, channel, postToTumblr){
 	});
 }
 
+const getRandomTopic = function(channel) {
+	
+	// Make request to the tumblr/random endpoint then use the post ID in the redirect URL
+ 	http.get(randomTopic, res => {
+		let redirectData = ''
+		
+		res.on('data', chunk => {
+			redirectData += chunk
+		})
+		
+		res.on('end', () => {
+			let redirect = res.headers.location
+			console.log("Redirecting to: ", redirect)
+			
+			let regex = /post\/[0-9]*\//gm
+			let id = redirect.match(regex)[0];
+			id = id.replace("post", '');
+			id = id.replaceAll("/", '');
+
+			let params = {'id': id}
+			
+			tumblrClient.blogPosts(topicBlog, params, (err, response) => {
+				
+				console.log(err)
+				
+				if(!err){
+					channel.send(response.posts[0].title);
+				}
+			});
+
+		})
+	}); 
+}
