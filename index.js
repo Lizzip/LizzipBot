@@ -1,6 +1,7 @@
 'use strict';
 const fs = require("fs");
 const http =  require("https")
+const html = require("html-entities")
 
 
 // Load config
@@ -255,10 +256,14 @@ const searchTopic = function(search, channel){
 		
 		res.on('end', () => {
 			const matches = [...data.matchAll(regex)];
-			const rand = randomInt(0, matches.length);
+			const rand = randomInt(0, matches.length-1);
+			console.log("Rand:", rand)
+			console.log("Max matches", matches.length-1);
+			
 			let t = matches[rand][0];
 			t = t.replace('<h2 class="post-title">', '');
 			t = t.replace('</h2>', '');
+			t = html.decode(t);
 			channel.send(t);
 		});
 	}); 	
