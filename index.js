@@ -74,6 +74,11 @@ const removeUsername = str => {
     return str;
 }
 
+// Generate random int between two numbers
+function randomInt(min, max) { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
 
 // Discord Message Listener
 discClient.on('messageCreate', message => {
@@ -95,6 +100,14 @@ discClient.on('messageCreate', message => {
 			console.log("Getting random topic");
 			getRandomTopic(message.channel)
         }
+		
+		// SEARCH FOR PAST TOPIC FROM TUMBLR
+		if(msg.startsWith(".search ")){
+			let t = message.content;
+			t = t.substring(8).trim();
+			console.log("Searching for topic: ", t);
+			searchTopic(t, message.channel);
+		}
 
         // MARKOV
         if(msg.startsWith(".markov")){
@@ -223,4 +236,30 @@ const getRandomTopic = function(channel) {
 
 		})
 	}); 
+}
+
+
+const searchTopic = function(search, channel){
+
+	// Make search request to tumblr/search endpoint then use the post
+	let searchString = search.replaceAll(" ", "+");
+	let url = `https://${topicBlog}/search/${searchString}`;
+	let regex = /<h2 class="post-title">.*<\/h2>/gm
+	
+	http.get(url, res => {
+		let data = ''
+	
+		res.on('data', chunk => {
+			data += chunk
+		})
+		
+		res.on('end', () => {
+			const matches = [...data.matchAll(regex)];
+			const rand = randomInt(0, matches.length);
+			let t = matches[rand][0];
+			t = t.replace('<h2 class="post-title">', '');
+			t = t.replace('</h2>', '');
+			channel.send(t);
+		});
+	}); 	
 }
