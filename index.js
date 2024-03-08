@@ -281,7 +281,7 @@ const recursiveTopicGet = function(url, searchString, pageNum, topics, channel, 
 				// Check if we've hit the final page of the search, call again if not, output topics if we have
 				if(topics.indexOf("Sorry, no posts found") > -1 || pageNum > 9){
 					topics = topics.filter(x => x !== "Sorry, no posts found");
-					topics = topics.filter(x => `- ${x}`);
+					topics = topics.map(i => '- ' + i);
 
 					if(topics.length > 0){
 						// Spit out 10 topics at a time
