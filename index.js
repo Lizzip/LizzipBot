@@ -20,10 +20,10 @@ const topicBlog = config.tumblr.topics;
 const randomTopic = config.tumblr.random_topics;
 const tumblr = require('tumblr.js');
 const tumblrClient = tumblr.createClient({
-  consumer_key: config.tumblr.consumer_key,
-  consumer_secret: config.tumblr.consumer_secret,
-  token: config.tumblr.token,
-  token_secret: config.tumblr.token_secret
+	consumer_key: config.tumblr.consumer_key,
+	consumer_secret: config.tumblr.consumer_secret,
+	token: config.tumblr.token,
+	token_secret: config.tumblr.token_secret
 });
 
 
@@ -47,7 +47,7 @@ discClient.once('ready', () => {
 const irc = require('irc');
 const ircChannel = config.irc.channel;
 const ircClient = new irc.Client(config.irc.server, config.irc.username, {
-    channels: [ircChannel],
+   channels: [ircChannel],
 	port: config.irc.port
 });
 ircClient.addListener('error', message => console.log('error: ', message));
@@ -77,7 +77,7 @@ const removeUsername = str => {
 
 // Generate random int between two numbers
 function randomInt(min, max) { // min and max included 
-  return Math.floor(Math.random() * (max - min + 1) + min)
+	return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 
@@ -100,7 +100,7 @@ discClient.on('messageCreate', message => {
 		if(msg.startsWith(".random")){
 			console.log("Getting random topic");
 			getRandomTopic(message.channel)
-        }
+		}
 		
 		// SEARCH FOR PAST TOPIC FROM TUMBLR
 		if(msg.startsWith(".search ")){
@@ -110,38 +110,46 @@ discClient.on('messageCreate', message => {
 			searchTopic(t, message.channel);
 		}
 
-        // MARKOV
-        if(msg.startsWith(".markov")){
-            ircClient.say(ircChannel, ".markov");
-            console.log("Markov!");
-        }
+		// SEARCH FOR PAST TOPIC FROM TUMBLR AND OUTPUT ALL 
+		if(msg.startsWith(".searchall ")){
+			let t = message.content;
+			t = t.substring(11).trim();
+			console.log("Searching for topic: ", t);
+			searchTopic(t, message.channel, true);
+		}
 
-        //ULTRABUTT MESSAGES
-        if(msg.startsWith(".ultrabutt")){
-            ircClient.say(ircChannel, message.content);
-            console.log(message.content);
-        }
-		
+		// MARKOV
+		if(msg.startsWith(".markov")){
+			ircClient.say(ircChannel, ".markov");
+			console.log("Markov!");
+		}
+
+		//ULTRABUTT MESSAGES
+		if(msg.startsWith(".ultrabutt")){
+			ircClient.say(ircChannel, message.content);
+			console.log(message.content);
+		}
+
 		//DINGDINGDING
 		if(msg.startsWith(".ding ")){
 			let t = message.content;
-            t = t.substring(6).trim();
-            console.log("Creating ding png: ", t);
+			t = t.substring(6).trim();
+			console.log("Creating ding png: ", t);
 			postDing(t, message.channel, true);
         }
 
         //DINGDINGDING without posting to tumblr
 		if(msg.startsWith(".dingnopost ")){
 			let t = message.content;
-            t = t.substring(12).trim();
-            console.log("Creating ding png: ", t);
+			t = t.substring(12).trim();
+			console.log("Creating ding png: ", t);
 			postDing(t, message.channel, false);
-        }
+		}
 
-        // TEST
-        if(message.content.startsWith("/test ")){
-            let t = message.content;
-            console.log("testing: ", t);
+		// TEST
+		if(message.content.startsWith("/test ")){
+			let t = message.content;
+			console.log("testing: ", t);
 			message.channel.send('i respond');
         }
     }
@@ -226,13 +234,9 @@ const getRandomTopic = function(channel) {
 
 			let params = {'id': id}
 			
-			tumblrClient.blogPosts(topicBlog, params, (err, response) => {
-				
+			tumblrClient.blogPosts(topicBlog, params, (err, response) => {	
 				console.log(err)
-				
-				if(!err){
-					channel.send(response.posts[0].title);
-				}
+				if(!err) channel.send(response.posts[0].title);
 			});
 
 		})
@@ -240,31 +244,96 @@ const getRandomTopic = function(channel) {
 }
 
 
-const searchTopic = function(search, channel){
+const recursiveTopicGet = function(url, searchString, pageNum, topics, channel, callback){
+	let regex = /<h2 class="post-title">.*<\/h2>/gm
+
+	// Only query up to 10 pages
+	if(pageNum <= 10){
+		if(pageNum >= 2) url = `https://${topicBlog}/search/${searchString}/page/${pageNum}`;
+		let m = [];
+		console.log(`Getting URL: ${url}`)
+
+		http.get(url, res => {
+			let data = ''
+		
+			res.on('data', chunk => {
+				data += chunk
+			})
+			
+			res.on('end', () => {
+				const matches = [...data.matchAll(regex)];
+				
+				matches.forEach(function(part, index) {
+					let t = matches[index][0];
+					t = t.replace('<h2 class="post-title">', '');
+				 	t = t.replace('</h2>', '');
+				 	t = html.decode(t);
+					m.push(t);
+				});
+
+				let uniqueMatches = m.filter(function(elem, pos) {
+					return m.indexOf(elem) == pos;
+				});
+
+				topics = uniqueMatches.concat(topics);
+				pageNum = pageNum += 1;
+
+				// Check if we've hit the final page of the search, call again if not, output topics if we have
+				if(topics.indexOf("Sorry, no posts found") > -1 || pageNum > 9){
+					topics = topics.filter(x => x !== "Sorry, no posts found");
+
+					if(topics.length > 0){
+						// Spit out 10 topics at a time
+						let sections = []
+						while(topics.length > 0){
+							sections.push(topics.splice(0,10));
+						}
+						
+						sections.forEach(s => channel.send(s.join('\n')));
+					}
+					else channel.send("Nah, nothing of the sort found")
+				}
+				else {
+					return callback(url, searchString, pageNum, topics, channel, recursiveTopicGet)
+				}
+			});
+		}); 
+		
+	}
+}
+
+
+const searchTopic = function(search, channel, searchall){
 
 	// Make search request to tumblr/search endpoint then use the post
 	let searchString = search.replaceAll(" ", "+");
-	let url = `https://${topicBlog}/search/${searchString}`;
 	let regex = /<h2 class="post-title">.*<\/h2>/gm
+	let firstUrl = `https://${topicBlog}/search/${searchString}`;
+	let pageNum = 1;
 	
-	http.get(url, res => {
-		let data = ''
-	
-		res.on('data', chunk => {
-			data += chunk
-		})
+	if(searchall){
+		recursiveTopicGet(firstUrl, searchString, pageNum, [], channel, recursiveTopicGet)
+	}
+	else {
+		http.get(firstUrl, res => {
+			let data = ''
 		
-		res.on('end', () => {
-			const matches = [...data.matchAll(regex)];
-			const rand = randomInt(0, matches.length-1);
-			console.log("Rand:", rand)
-			console.log("Max matches", matches.length-1);
+			res.on('data', chunk => {
+				data += chunk
+			})
 			
-			let t = matches[rand][0];
-			t = t.replace('<h2 class="post-title">', '');
-			t = t.replace('</h2>', '');
-			t = html.decode(t);
-			channel.send(t);
-		});
-	}); 	
+			res.on('end', () => {
+				const matches = [...data.matchAll(regex)];
+				const rand = randomInt(0, matches.length-1);
+				console.log("Rand:", rand)
+				console.log("Max matches", matches.length-1);
+				
+				let t = matches[rand][0];
+				t = t.replace('<h2 class="post-title">', '');
+				t = t.replace('</h2>', '');
+				t = html.decode(t);
+				channel.send(t);
+			});
+		}); 
+	}
 }
