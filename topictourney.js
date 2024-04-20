@@ -27,8 +27,10 @@ const fetchTopicDump = function(url){
 
 // Check if a sentence exists in the topic dump file
 const topicExists = function(topic){
+    // TODO: Use a string normalizer
     topic = topic.replace(/”/g, '\"');
     topic = topic.replace(/“/g, '\"');
+    topic = topic.replace(/’/g, '\'');
     
     // Open the topic file and store all topics in an array
     let allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
