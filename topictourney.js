@@ -32,6 +32,7 @@ const topicExists = function(topic){
     let allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
     for(let i = 0; i < allTopics.length; i++){
         allTopics[i] = Buffer.from(allTopics[i], 'utf-8').toString();
+        allTopics[i] = allTopics[i].replace(/”/g, '"');
     }
     
     return allTopics.indexOf(topic);
