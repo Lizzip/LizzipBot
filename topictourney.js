@@ -29,7 +29,11 @@ const fetchTopicDump = function(url){
 const topicExists = function(topic){
 
     // Open the topic file and store all topics in an array
-    const allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
+    let allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
+    for(let i = 0; i < allTopics.length; i++){
+        allTopics[i] = Buffer.from(allTopics[i], 'utf-8').toString();
+    }
+    
     return allTopics.indexOf(topic);
 }
 
@@ -44,6 +48,7 @@ const rankingExists = function(topic){
     for(let i = 0; i < allRankings.length; i++){
         let splitComma = allRankings[i].lastIndexOf(',')
         allRankings[i] = allRankings[i].substring(0, splitComma);
+        allRankings[i] = Buffer.from(allRankings[i], 'utf-8').toString();
     }
 
     return allRankings.indexOf(topic);
@@ -52,6 +57,7 @@ const rankingExists = function(topic){
 
 // Increase the ranking of a topic
 const addPoint = function(topic){
+    topic = Buffer.from(topic, 'utf-8').toString();
 
     // First check this is a valid topic 
     if(topicExists(topic) > -1){
@@ -95,6 +101,9 @@ const addPoint = function(topic){
             file.end();
             console.log("Updated rankings file")
         });
+    }
+    else {
+        console.log("Topic does not exist: ", topic)
     }
 }
 
