@@ -200,7 +200,7 @@ discClient.on('messageReactionAdd', (reaction, user) => {
         console.log("Topic emoji count: ", topicCount)
     }
 
-    if(name === "topic" && topicCount == 0){
+    if(name === "topic" && topicCount == 1){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
         ircClient.send('TOPIC', ircChannel, t);
