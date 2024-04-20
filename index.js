@@ -218,6 +218,8 @@ discClient.on('messageReactionAdd', (reaction, user) => {
     if(name == '🏆'){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
+        t = t.replace("/topic ", '');
+        t = t.replace(".point ", '');
         tourney.addPoint(t);
         console.log("adding point ", t)
     }
