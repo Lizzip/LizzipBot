@@ -161,10 +161,15 @@ discClient.on('messageReactionAdd', (reaction, user) => {
 
     const name = reaction._emoji.name;
     const id = reaction._emoji.id;
+	const topicEmojiId = "1035917555841384498";
+	let topicCount = 0;
 
-    //console.log(reaction.message.reactions.cache)
+	if(reaction.message.reactions.cache.get(topicEmojiId)){
+		topicCount = reaction.message.reactions.cache.get(topicEmojiId).count
+		console.log("Topic emoji count: ", topicCount)
+	}
 
-    if(name === "topic"){
+    if(name === "topic" && topicCount == 0){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
         ircClient.send('TOPIC', ircChannel, t);
