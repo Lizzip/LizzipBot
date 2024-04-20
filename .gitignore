@@ -7,3 +7,5 @@ node_modules/
 # Config
 config.json
 
+# topic rankings
+topictourney/

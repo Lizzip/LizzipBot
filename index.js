@@ -14,16 +14,20 @@ const ding = require('./ding.js')
 const dingImgLoc = "./ding/dingdingding.png";
 
 
+// Import topic tourney
+const tourney = require('./topictourney.js')
+
+
 // Setup Tumblr
 const dingBlog = config.tumblr.blog;
 const topicBlog = config.tumblr.topics;
 const randomTopic = config.tumblr.random_topics;
 const tumblr = require('tumblr.js');
 const tumblrClient = tumblr.createClient({
-	consumer_key: config.tumblr.consumer_key,
-	consumer_secret: config.tumblr.consumer_secret,
-	token: config.tumblr.token,
-	token_secret: config.tumblr.token_secret
+    consumer_key: config.tumblr.consumer_key,
+    consumer_secret: config.tumblr.consumer_secret,
+    token: config.tumblr.token,
+    token_secret: config.tumblr.token_secret
 });
 
 
@@ -39,7 +43,7 @@ const discClient = new Client({ intents: [
 ] });
 
 discClient.once('ready', () => {
-	console.log('Discord Ready!')
+    console.log('Discord Ready!')
 });
 
 
@@ -48,7 +52,7 @@ const irc = require('irc');
 const ircChannel = config.irc.channel;
 const ircClient = new irc.Client(config.irc.server, config.irc.username, {
    channels: [ircChannel],
-	port: config.irc.port
+    port: config.irc.port
 });
 ircClient.addListener('error', message => console.log('error: ', message));
 
@@ -77,7 +81,7 @@ const removeUsername = str => {
 
 // Generate random int between two numbers
 function randomInt(min, max) { // min and max included 
-	return Math.floor(Math.random() * (max - min + 1) + min)
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 
@@ -94,86 +98,128 @@ discClient.on('messageCreate', message => {
             t = t.substring(6).trim();
             ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
+
+            // Wait for 30 seconds then download the full topics dump txt
+            (async function() {
+                const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+                await sleep(30000)
+                downloadTopics();
+            })()
         }
-		
-		// GET RANDOM PAST TOPIC FROM TUMBLR
-		if(msg.startsWith(".random")){
-			console.log("Getting random topic");
-			getRandomTopic(message.channel)
-		}
-		
-		// SEARCH FOR PAST TOPIC FROM TUMBLR
-		if(msg.startsWith(".search ")){
-			let t = message.content;
-			t = t.substring(8).trim();
-			console.log("Searching for topic: ", t);
-			searchTopic(t, message.channel);
-		}
+        
+        // GET RANDOM PAST TOPIC FROM TUMBLR
+        if(msg.startsWith(".random")){
+            console.log("Getting random topic");
+            getRandomTopic(message.channel)
+        }
+        
+        // SEARCH FOR PAST TOPIC FROM TUMBLR
+        if(msg.startsWith(".search ")){
+            let t = message.content;
+            t = t.substring(8).trim();
+            console.log("Searching for topic: ", t);
+            searchTopic(t, message.channel);
+        }
 
-		// SEARCH FOR PAST TOPIC FROM TUMBLR AND OUTPUT ALL 
-		if(msg.startsWith(".searchall ")){
-			let t = message.content;
-			t = t.substring(11).trim();
-			console.log("Searching for topic: ", t);
-			searchTopic(t, message.channel, true);
-		}
+        // SEARCH FOR PAST TOPIC FROM TUMBLR AND OUTPUT ALL 
+        if(msg.startsWith(".searchall ")){
+            let t = message.content;
+            t = t.substring(11).trim();
+            console.log("Searching for topic: ", t);
+            searchTopic(t, message.channel, true);
+        }
 
-		// MARKOV
-		if(msg.startsWith(".markov")){
-			ircClient.say(ircChannel, ".markov");
-			console.log("Markov!");
-		}
+        // MARKOV
+        if(msg.startsWith(".markov")){
+            ircClient.say(ircChannel, ".markov");
+            console.log("Markov!");
+        }
 
-		//ULTRABUTT MESSAGES
-		if(msg.startsWith(".ultrabutt")){
-			ircClient.say(ircChannel, message.content);
-			console.log(message.content);
-		}
+        //ULTRABUTT MESSAGES
+        if(msg.startsWith(".ultrabutt")){
+            ircClient.say(ircChannel, message.content);
+            console.log(message.content);
+        }
 
-		//DINGDINGDING
-		if(msg.startsWith(".ding ")){
-			let t = message.content;
-			t = t.substring(6).trim();
-			console.log("Creating ding png: ", t);
-			postDing(t, message.channel, true);
+        //DINGDINGDING
+        if(msg.startsWith(".ding ")){
+            let t = message.content;
+            t = t.substring(6).trim();
+            console.log("Creating ding png: ", t);
+            postDing(t, message.channel, true);
         }
 
         //DINGDINGDING without posting to tumblr
-		if(msg.startsWith(".dingnopost ")){
-			let t = message.content;
-			t = t.substring(12).trim();
-			console.log("Creating ding png: ", t);
-			postDing(t, message.channel, false);
-		}
+        if(msg.startsWith(".dingnopost ")){
+            let t = message.content;
+            t = t.substring(12).trim();
+            console.log("Creating ding png: ", t);
+            postDing(t, message.channel, false);
+        }
 
-		// TEST
-		if(message.content.startsWith("/test ")){
-			let t = message.content;
-			console.log("testing: ", t);
-			message.channel.send('i respond');
+        // TEST
+        if(message.content.startsWith("/test ")){
+            let t = message.content;
+            console.log("testing: ", t);
+            message.channel.send('i respond');
+        }
+
+        if(msg.startsWith(".fetchtopics")){
+            // Download the full topic txt file 
+            downloadTopics();
+        }
+
+        // Force a point to a topic ranking
+        if(msg.startsWith(".point ")){
+            let t = message.content;
+            t = t.substring(7).trim();
+            tourney.addPoint(t)
+        }
+
+        // Output the top 10 topic rankings
+        if(msg.startsWith(".rankings")){
+            topTopics(message.channel);
         }
     }
 });
 
 
-// Watch for the TOPIC emoji
+// Watch for the TOPIC or TROPHY emoji
 discClient.on('messageReactionAdd', (reaction, user) => {
 
     const name = reaction._emoji.name;
     const id = reaction._emoji.id;
-	const topicEmojiId = "1035917555841384498";
-	let topicCount = 0;
+    const topicEmojiId = "1035917555841384498";
+    let topicCount = 0;
 
-	if(reaction.message.reactions.cache.get(topicEmojiId)){
-		topicCount = reaction.message.reactions.cache.get(topicEmojiId).count
-		console.log("Topic emoji count: ", topicCount)
-	}
+    //console.log(reaction.message.reactions.cache)
+
+    // If its the TOPIC emote, set a topic (but only if its the first time the topic emote has been added to this post)
+    if(reaction.message.reactions.cache.get(topicEmojiId)){
+        topicCount = reaction.message.reactions.cache.get(topicEmojiId).count
+        console.log("Topic emoji count: ", topicCount)
+    }
 
     if(name === "topic" && topicCount == 0){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
         ircClient.send('TOPIC', ircChannel, t);
         console.log("setting topic: ", t);
+
+        // Wait for 30 seconds then download the full topics dump txt
+        (async function() {
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+            await sleep(30000)
+            downloadTopics();
+        })()
+    }
+
+    // If it's the TROPY emote then add to topic rankings
+    if(name == '🏆'){
+        let t = removeUsername(reaction.message.content);
+        t = t.trim();
+        tourney.addPoint(t);
+        console.log("adding point ", t)
     }
 
 });
@@ -182,164 +228,179 @@ discClient.login(discordToken);
 
 // Post the last generated Ding to Tumblr
 const tumblDing = function(dingText, channel){
-	
-	//Convert ding png to base64
-	const img = fs.readFileSync(dingImgLoc);
-	const imgBuffer = Buffer.from(img).toString('base64');
-	
-	let params = {
-		'data64': imgBuffer,
-		'caption': dingText
-	}
-	
-	tumblrClient.createPhotoPost(dingBlog, params, (err, response) => {
-		console.log(err);
-		console.log(response);
+    
+    //Convert ding png to base64
+    const img = fs.readFileSync(dingImgLoc);
+    const imgBuffer = Buffer.from(img).toString('base64');
+    
+    let params = {
+        'data64': imgBuffer,
+        'caption': dingText
+    }
+    
+    tumblrClient.createPhotoPost(dingBlog, params, (err, response) => {
+        console.log(err);
+        console.log(response);
 
         if(!err){
             channel.send(`Ding posted to https://${config.tumblr.blog}`); 
         }
-	});
+    });
 }
 
 
 // Create a Ding and post it to Discord
 const postDing = function(dingText, channel, postToTumblr){
-	
-	// Create the new dingdingding
-	ding.createDing(dingText).then(() => {
+    
+    // Create the new dingdingding
+    ding.createDing(dingText).then(() => {
 
-		const dingFile = new MessageAttachment(fs.readFileSync(dingImgLoc), 'dingdingding.png');
-		channel.send({ files: [dingFile] });
-		
+        const dingFile = new MessageAttachment(fs.readFileSync(dingImgLoc), 'dingdingding.png');
+        channel.send({ files: [dingFile] });
+        
         if(postToTumblr){
-		    tumblDing(dingText, channel);
+            tumblDing(dingText, channel);
         }
-	});
+    });
 }
 
 const getRandomTopic = function(channel) {
-	
-	// Make request to the tumblr/random endpoint then use the post ID in the redirect URL
- 	http.get(randomTopic, res => {
-		let redirectData = ''
-		
-		res.on('data', chunk => {
-			redirectData += chunk
-		})
-		
-		res.on('end', () => {
-			let redirect = res.headers.location
-			console.log("Redirecting to: ", redirect)
-			
-			let regex = /post\/[0-9]*\//gm
-			let id = redirect.match(regex)[0];
-			id = id.replace("post", '');
-			id = id.replaceAll("/", '');
+    
+    // Make request to the tumblr/random endpoint then use the post ID in the redirect URL
+     http.get(randomTopic, res => {
+        let redirectData = ''
+        
+        res.on('data', chunk => {
+            redirectData += chunk
+        })
+        
+        res.on('end', () => {
+            let redirect = res.headers.location
+            console.log("Redirecting to: ", redirect)
+            
+            let regex = /post\/[0-9]*\//gm
+            let id = redirect.match(regex)[0];
+            id = id.replace("post", '');
+            id = id.replaceAll("/", '');
 
-			let params = {'id': id}
-			
-			tumblrClient.blogPosts(topicBlog, params, (err, response) => {	
-				console.log(err)
-				if(!err) channel.send(response.posts[0].title);
-			});
+            let params = {'id': id}
+            
+            tumblrClient.blogPosts(topicBlog, params, (err, response) => {    
+                console.log(err)
+                if(!err) channel.send(response.posts[0].title);
+            });
 
-		})
-	}); 
+        })
+    }); 
 }
 
 
 const recursiveTopicGet = function(url, searchString, pageNum, topics, channel, callback){
-	let regex = /<h2 class="post-title">.*<\/h2>/gm
+    let regex = /<h2 class="post-title">.*<\/h2>/gm
 
-	// Only query up to 10 pages
-	if(pageNum <= 10){
-		if(pageNum >= 2) url = `https://${topicBlog}/search/${searchString}/page/${pageNum}`;
-		let m = [];
-		console.log(`Getting URL: ${url}`)
+    // Only query up to 10 pages
+    if(pageNum <= 10){
+        if(pageNum >= 2) url = `https://${topicBlog}/search/${searchString}/page/${pageNum}`;
+        let m = [];
+        console.log(`Getting URL: ${url}`)
 
-		http.get(url, res => {
-			let data = ''
-		
-			res.on('data', chunk => {
-				data += chunk
-			})
-			
-			res.on('end', () => {
-				const matches = [...data.matchAll(regex)];
-				
-				matches.forEach(function(part, index) {
-					let t = matches[index][0];
-					t = t.replace('<h2 class="post-title">', '');
-				 	t = t.replace('</h2>', '');
-				 	t = html.decode(t);
-					m.push(t);
-				});
+        http.get(url, res => {
+            let data = ''
+        
+            res.on('data', chunk => {
+                data += chunk
+            })
+            
+            res.on('end', () => {
+                const matches = [...data.matchAll(regex)];
+                
+                matches.forEach(function(part, index) {
+                    let t = matches[index][0];
+                    t = t.replace('<h2 class="post-title">', '');
+                     t = t.replace('</h2>', '');
+                     t = html.decode(t);
+                    m.push(t);
+                });
 
-				let uniqueMatches = m.filter(function(elem, pos) {
-					return m.indexOf(elem) == pos;
-				});
+                let uniqueMatches = m.filter(function(elem, pos) {
+                    return m.indexOf(elem) == pos;
+                });
 
-				topics = uniqueMatches.concat(topics);
-				pageNum = pageNum += 1;
+                topics = uniqueMatches.concat(topics);
+                pageNum = pageNum += 1;
 
-				// Check if we've hit the final page of the search, call again if not, output topics if we have
-				if(topics.indexOf("Sorry, no posts found") > -1 || pageNum > 9){
-					topics = topics.filter(x => x !== "Sorry, no posts found");
-					topics = topics.map(i => '- ' + i);
+                // Check if we've hit the final page of the search, call again if not, output topics if we have
+                if(topics.indexOf("Sorry, no posts found") > -1 || pageNum > 9){
+                    topics = topics.filter(x => x !== "Sorry, no posts found");
+                    topics = topics.map(i => '- ' + i);
 
-					if(topics.length > 0){
-						// Spit out 10 topics at a time
-						let sections = []
-						while(topics.length > 0){
-							sections.push(topics.splice(0,10));
-						}
-						
-						sections.forEach(s => channel.send(s.join('\n')));
-					}
-					else channel.send("Nah, nothing of the sort found")
-				}
-				else {
-					return callback(url, searchString, pageNum, topics, channel, recursiveTopicGet)
-				}
-			});
-		}); 
-		
-	}
+                    if(topics.length > 0){
+                        // Spit out 10 topics at a time
+                        let sections = []
+                        while(topics.length > 0){
+                            sections.push(topics.splice(0,10));
+                        }
+                        
+                        sections.forEach(s => channel.send(s.join('\n')));
+                    }
+                    else channel.send("Nah, nothing of the sort found")
+                }
+                else {
+                    return callback(url, searchString, pageNum, topics, channel, recursiveTopicGet)
+                }
+            });
+        }); 
+        
+    }
 }
 
 
 const searchTopic = function(search, channel, searchall){
 
-	// Make search request to tumblr/search endpoint then use the post
-	let searchString = search.replaceAll(" ", "+");
-	let regex = /<h2 class="post-title">.*<\/h2>/gm
-	let firstUrl = `https://${topicBlog}/search/${searchString}`;
-	let pageNum = 1;
-	
-	if(searchall){
-		recursiveTopicGet(firstUrl, searchString, pageNum, [], channel, recursiveTopicGet)
-	}
-	else {
-		http.get(firstUrl, res => {
-			let data = ''
-		
-			res.on('data', chunk => {
-				data += chunk
-			})
-			
-			res.on('end', () => {
-				const matches = [...data.matchAll(regex)];
-				const rand = randomInt(0, matches.length-1);
-				console.log("Rand:", rand)
-				console.log("Max matches", matches.length-1);
-				
-				let t = matches[rand][0];
-				t = t.replace('<h2 class="post-title">', '');
-				t = t.replace('</h2>', '');
-				t = html.decode(t);
-				channel.send(t);
-			});
-		}); 
-	}
+    // Make search request to tumblr/search endpoint then use the post
+    let searchString = search.replaceAll(" ", "+");
+    let regex = /<h2 class="post-title">.*<\/h2>/gm
+    let firstUrl = `https://${topicBlog}/search/${searchString}`;
+    let pageNum = 1;
+    
+    if(searchall){
+        recursiveTopicGet(firstUrl, searchString, pageNum, [], channel, recursiveTopicGet)
+    }
+    else {
+        http.get(firstUrl, res => {
+            let data = ''
+        
+            res.on('data', chunk => {
+                data += chunk
+            })
+            
+            res.on('end', () => {
+                const matches = [...data.matchAll(regex)];
+                const rand = randomInt(0, matches.length-1);
+                console.log("Rand:", rand)
+                console.log("Max matches", matches.length-1);
+                
+                let t = matches[rand][0];
+                t = t.replace('<h2 class="post-title">', '');
+                t = t.replace('</h2>', '');
+                t = html.decode(t);
+                channel.send(t);
+            });
+        }); 
+    }
+}
+
+// Call the download topics function in the topictourney module 
+const downloadTopics = function(){
+    const url = config.misc.topic_dump_url;
+    tourney.fetchTopicDump(url)
+}
+
+// Output the top 10 rated topics 
+const topTopics = function(channel){
+    const top = tourney.showTopRankings();
+
+    for(let i = 0; i < top.length; i++){
+        channel.send(`**Rank #${i+1} with a score of ${top[i][1]}** \n${top[i][0]}`);
+    }
 }
