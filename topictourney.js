@@ -9,7 +9,7 @@ const tourneyLoc = "topictourney/rankings.txt"
 
 
 // Download the topics txt file from the URL 
-const fetchTopicDump = function(url){
+const fetchTopicDump = function(url, topic){
 
 	const file = fs.createWriteStream(dumpLoc);
 	const request = https.get(url, function(response) {
@@ -17,8 +17,19 @@ const fetchTopicDump = function(url){
 	
 	   // after download completed close filestream
 	   file.on("finish", () => {
-		   file.close();
-		   console.log("Topics downloaded successfully");
+		    file.close();
+		    console.log("Topics downloaded successfully");
+
+            // If we passed a new topic add it to the file too
+            if(topic){
+                fs.appendFile(dumpLoc, topic, function (err) {
+                    if (err) {
+                        // append failed
+                    } else {
+                        // done
+                    }
+                });
+            }
 	   });
 	});
 

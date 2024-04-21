@@ -99,11 +99,11 @@ discClient.on('messageCreate', message => {
             ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
 
-            // Wait for 30 seconds then download the full topics dump txt
+            // Wait for 3 seconds then download the full topics dump txt
             (async function() {
                 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-                await sleep(30000)
-                downloadTopics();
+                await sleep(3000)
+                downloadTopics(t);
             })()
         }
         
@@ -206,16 +206,16 @@ discClient.on('messageReactionAdd', (reaction, user) => {
         ircClient.send('TOPIC', ircChannel, t);
         console.log("setting topic: ", t);
 
-        // Wait for 30 seconds then download the full topics dump txt
+        // Wait for 3 seconds then download the full topics dump txt
         (async function() {
             const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-            await sleep(30000)
-            downloadTopics();
+            await sleep(3000)
+            downloadTopics(t);
         })()
     }
 
     // If it's the TROPY emote then add to topic rankings
-    if(name == '🏆'){
+    if(name == '🏆' || (name === "topic" && topicCount > 1)){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
         t = t.replace("/topic ", '');
@@ -393,9 +393,9 @@ const searchTopic = function(search, channel, searchall){
 }
 
 // Call the download topics function in the topictourney module 
-const downloadTopics = function(){
+const downloadTopics = function(t){
     const url = config.misc.topic_dump_url;
-    tourney.fetchTopicDump(url)
+    tourney.fetchTopicDump(url, t)
 }
 
 // Output the top 10 rated topics 
