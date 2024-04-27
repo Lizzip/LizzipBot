@@ -50,11 +50,11 @@ discClient.once('ready', () => {
 // Setup IRC
 const irc = require('irc');
 const ircChannel = config.irc.channel;
-// const ircClient = new irc.Client(config.irc.server, config.irc.username, {
-//    channels: [ircChannel],
-//     port: config.irc.port
-// });
-// ircClient.addListener('error', message => console.log('error: ', message));
+const ircClient = new irc.Client(config.irc.server, config.irc.username, {
+   channels: [ircChannel],
+    port: config.irc.port
+});
+ircClient.addListener('error', message => console.log('error: ', message));
 
 
 // Remove IRC relay usernames from messages
@@ -106,7 +106,7 @@ discClient.on('messageCreate', message => {
         if(msg.startsWith("/topic ") || msg.startsWith(".topic ")){
             let t = message.content;
             t = t.substring(6).trim();
-            //ircClient.send('TOPIC', ircChannel, t);
+            ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
 
             // Wait for 3 seconds then download the full topics dump txt
@@ -119,13 +119,13 @@ discClient.on('messageCreate', message => {
 
         // Call MARKOV in IRC
         if(msg.startsWith(".markov")){
-            //ircClient.say(ircChannel, ".markov");
+            ircClient.say(ircChannel, ".markov");
             console.log("Markov!");
         }
 
         // Forward an ultrabutt message to IRC
         if(msg.startsWith(".ultrabutt")){
-            //ircClient.say(ircChannel, message.content);
+            ircClient.say(ircChannel, message.content);
             console.log(message.content);
         }
 
