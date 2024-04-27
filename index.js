@@ -50,11 +50,11 @@ discClient.once('ready', () => {
 // Setup IRC
 const irc = require('irc');
 const ircChannel = config.irc.channel;
-const ircClient = new irc.Client(config.irc.server, config.irc.username, {
-   channels: [ircChannel],
-    port: config.irc.port
-});
-ircClient.addListener('error', message => console.log('error: ', message));
+// const ircClient = new irc.Client(config.irc.server, config.irc.username, {
+//    channels: [ircChannel],
+//     port: config.irc.port
+// });
+// ircClient.addListener('error', message => console.log('error: ', message));
 
 
 // Remove IRC relay usernames from messages
@@ -92,11 +92,21 @@ discClient.on('messageCreate', message => {
     //Get messages from the discord channels
     if(discordChannels.includes(message.channel.id)){
 
-        // SET TOPIC IN IRC
+        // Test command
+        if(message.content.startsWith("/test ")){
+            let t = message.content;
+            console.log("testing: ", t);
+            message.channel.send('i respond');
+        }
+
+
+        ///////////////////////////// IRC /////////////////////////////
+
+        // Set a topic in IRC
         if(msg.startsWith("/topic ") || msg.startsWith(".topic ")){
             let t = message.content;
             t = t.substring(6).trim();
-            ircClient.send('TOPIC', ircChannel, t);
+            //ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
 
             // Wait for 3 seconds then download the full topics dump txt
@@ -106,14 +116,29 @@ discClient.on('messageCreate', message => {
                 downloadTopics(t);
             })()
         }
+
+        // Call MARKOV in IRC
+        if(msg.startsWith(".markov")){
+            //ircClient.say(ircChannel, ".markov");
+            console.log("Markov!");
+        }
+
+        // Forward an ultrabutt message to IRC
+        if(msg.startsWith(".ultrabutt")){
+            //ircClient.say(ircChannel, message.content);
+            console.log(message.content);
+        }
+
+
+        ///////////////////////////// TUMBLR /////////////////////////////
         
-        // GET RANDOM PAST TOPIC FROM TUMBLR
+        // Get a random past topic from Tumblr
         if(msg.startsWith(".random")){
             console.log("Getting random topic");
             getRandomTopic(message.channel)
         }
         
-        // SEARCH FOR PAST TOPIC FROM TUMBLR
+        // Search for a past topic from Tumblr and output one
         if(msg.startsWith(".search ")){
             let t = message.content;
             t = t.substring(8).trim();
@@ -121,24 +146,12 @@ discClient.on('messageCreate', message => {
             searchTopic(t, message.channel);
         }
 
-        // SEARCH FOR PAST TOPIC FROM TUMBLR AND OUTPUT ALL 
+        // Search for a past topic from Tumblr and output all found
         if(msg.startsWith(".searchall ")){
             let t = message.content;
             t = t.substring(11).trim();
             console.log("Searching for topic: ", t);
             searchTopic(t, message.channel, true);
-        }
-
-        // MARKOV
-        if(msg.startsWith(".markov")){
-            ircClient.say(ircChannel, ".markov");
-            console.log("Markov!");
-        }
-
-        //ULTRABUTT MESSAGES
-        if(msg.startsWith(".ultrabutt")){
-            ircClient.say(ircChannel, message.content);
-            console.log(message.content);
         }
 
         //DINGDINGDING
@@ -157,27 +170,31 @@ discClient.on('messageCreate', message => {
             postDing(t, message.channel, false);
         }
 
-        // TEST
-        if(message.content.startsWith("/test ")){
-            let t = message.content;
-            console.log("testing: ", t);
-            message.channel.send('i respond');
-        }
 
-        if(msg.startsWith(".fetchtopics")){
-            // Download the full topic txt file 
+        ///////////////////////////// TOPIC RANKINGS /////////////////////////////
+
+        // Download the full topic txt file 
+        if(msg.startsWith("/fetchtopics ") || msg.startsWith(".fetchtopics ")){
             downloadTopics();
         }
 
         // Force a point to a topic ranking
-        if(msg.startsWith(".point ")){
+        if(msg.startsWith("/point ") || msg.startsWith(".point ")){
             let t = message.content;
             t = t.substring(7).trim();
             tourney.addPoint(t)
         }
 
+        // Force a point to a topic ranking
+        if(msg.startsWith("/getpoints ") || msg.startsWith(".getpoints ")){
+            let t = message.content;
+            t = t.substring(11).trim();
+            const points = tourney.getPoints(t);
+            message.channel.send(`"${t}" has ${points} points`);
+        }
+
         // Output the top 10 topic rankings
-        if(msg.startsWith(".rankings")){
+        if(msg.startsWith("/rankings ") || msg.startsWith(".rankings ")){
             topTopics(message.channel);
         }
     }

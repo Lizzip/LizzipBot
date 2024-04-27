@@ -53,7 +53,7 @@ const topicExists = function(topic){
 }
 
 
-// Check if a sentence exists in the topic dump file
+// Check if a topic exists in the topic ranking file
 const rankingExists = function(topic){
 
     // Open the ranking file and store all topics in an array
@@ -148,6 +148,37 @@ const showTopRankings = function(){
 }
 
 
+// Get points for given topic 
+const getPoints = function(topic){
+
+    // Open the ranking file and store all topics and points in an array
+    let allRankings = fs.readFileSync(tourneyLoc).toString().split("\n");
+    let splitRankings = [];
+
+    // Separate the topic and the score
+    for(let i = 0; i < allRankings.length; i++){
+        let splitComma = allRankings[i].lastIndexOf(',')
+        
+        // Get topic
+        let rankedTopic = allRankings[i].substring(0, splitComma);
+        rankedTopic = Buffer.from(rankedTopic, 'utf-8').toString();
+
+        // Get points
+        let points = allRankings[i].substring(splitComma+1).trim();
+        points = parseInt(points);
+
+        splitRankings.push([rankedTopic, points]);
+    }
+
+    // Get the topic points or return 0 if not found
+    let returnedPoints = 0
+    const tp = splitRankings.filter(x => x[0] == topic)
+    if(tp.length > 0) returnedPoints = tp[0][1];
+
+    return returnedPoints;
+}
+
 exports.fetchTopicDump = fetchTopicDump;
 exports.addPoint = addPoint;
 exports.showTopRankings = showTopRankings;
+exports.getPoints = getPoints;
