@@ -174,7 +174,7 @@ discClient.on('messageCreate', message => {
         ///////////////////////////// TOPIC RANKINGS /////////////////////////////
 
         // Download the full topic txt file 
-        if(msg.startsWith("/fetchtopics ") || msg.startsWith(".fetchtopics ")){
+        if(msg.startsWith("/fetchtopics") || msg.startsWith(".fetchtopics")){
             downloadTopics();
         }
 
@@ -194,7 +194,7 @@ discClient.on('messageCreate', message => {
         }
 
         // Output the top 10 topic rankings
-        if(msg.startsWith("/rankings ") || msg.startsWith(".rankings ")){
+        if(msg.startsWith("/ranking") || msg.startsWith(".ranking")){
             topTopics(message.channel);
         }
     }
