@@ -455,12 +455,12 @@ const allTopTopics = function(channel){
             for(let j = 1; j < topics.length; j++){
 
                 // Batch the messages into sizes of 10 topics
-                if (j%10 == 1){
+                if (j%10 == 0){
                     offset = offset + 1;
                     outputString[offset] = [" - " + topics[j][0]];
                 }
                 else {
-                    outputString[offset] = outputString[offset].concat("\n- ", topics[j][0]);
+                    outputString[offset] = outputString[offset] + "\n- " + topics[j][0];
                 }
             }
         }
