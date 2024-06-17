@@ -142,7 +142,7 @@ const showTopRankings = function(limit = 0){
 
     // Sort the scores
     const sortedRankings = splitScore.sort((a, b) => b[1] - a[1])
-    console.log(sortedRankings)
+    //console.log(sortedRankings)
 
     // If no limit was passed return all topics, else only return given amount
     if(limit < 1) return sortedRankings;

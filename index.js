@@ -199,7 +199,7 @@ discClient.on('messageCreate', message => {
         }
 
         // Output all ranked topics 
-        if(msg.startsWith("/rankingall") || msg.startsWith(".rankingall")){
+        if(msg.startsWith("/allrankings") || msg.startsWith(".allrankings")){
             allTopTopics(message.channel);
         }
     }
@@ -433,8 +433,29 @@ const topTopics = function(channel){
 // Output every ranked topic 
 const allTopTopics = function(channel){
     const top = tourney.showTopRankings();
+    let points = [];
 
+    // Iterate the topic scores and gather all unique scores 
     for(let i = 0; i < top.length; i++){
-        channel.send(`**Rank #${i+1} with a score of ${top[i][1]}** \n${top[i][0]}`);
+        if(!points.includes(top[i][1])){
+            points.push(top[i][1])
+        }
+    }
+
+    // Output all topics at once for each unique score
+    for(let i = 0; i < points.length; i++){
+
+        let topics = top.filter(t => t[1] == points[i])
+        let outputString = " - " + topics[0][0];
+
+        // Concat all the topics with this score as a bullet pointed list
+        if(topics.length > 1){
+            for(let j = 1; j < topics.length; j++){
+                outputString = outputString.concat("\n- ", topics[j][0]);
+            }
+        }
+        
+        channel.send(`**Rank #${i+1} with a score of ${points[i]}:**`);
+        channel.send(outputString);
     }
 }
