@@ -122,8 +122,8 @@ const addPoint = function(topic){
     }
 }
 
-// View current top 10 rankings 
-const showTopRankings = function(){
+// View current top x rankings 
+const showTopRankings = function(limit = 0){
 
     // Open the ranking file and store all topics in an array
     let allRankings = fs.readFileSync(tourneyLoc).toString().split("\n");
@@ -144,9 +144,10 @@ const showTopRankings = function(){
     const sortedRankings = splitScore.sort((a, b) => b[1] - a[1])
     console.log(sortedRankings)
 
-    return sortedRankings.slice(0, 10);
+    // If no limit was passed return all topics, else only return given amount
+    if(limit < 1) return sortedRankings;
+    else return sortedRankings.slice(0, limit);
 }
-
 
 // Get points for given topic 
 const getPoints = function(topic){

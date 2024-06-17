@@ -197,6 +197,11 @@ discClient.on('messageCreate', message => {
         if(msg.startsWith("/ranking") || msg.startsWith(".ranking")){
             topTopics(message.channel);
         }
+
+        // Output all ranked topics 
+        if(msg.startsWith("/rankingall") || msg.startsWith(".rankingall")){
+            allTopTopics(message.channel);
+        }
     }
 });
 
@@ -417,6 +422,16 @@ const downloadTopics = function(t){
 
 // Output the top 10 rated topics 
 const topTopics = function(channel){
+    const limit = 10
+    const top = tourney.showTopRankings(limit);
+
+    for(let i = 0; i < top.length; i++){
+        channel.send(`**Rank #${i+1} with a score of ${top[i][1]}** \n${top[i][0]}`);
+    }
+}
+
+// Output every ranked topic 
+const allTopTopics = function(channel){
     const top = tourney.showTopRankings();
 
     for(let i = 0; i < top.length; i++){
