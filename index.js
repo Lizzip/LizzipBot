@@ -457,7 +457,7 @@ const allTopTopics = function(channel){
                 // Batch the messages into sizes of 10 topics
                 if (j%10 == 0){
                     offset = offset + 1;
-                    outputString[offset] = [" - " + topics[j][0]];
+                    outputString[offset] = " - " + topics[j][0];
                 }
                 else {
                     outputString[offset] = outputString[offset] + "\n- " + topics[j][0];
@@ -467,8 +467,8 @@ const allTopTopics = function(channel){
         
         // Output the messages to discord
         channel.send(`**Rank #${i+1} with a score of ${points[i]}:**`);
-        for(let j = 0; j < outputString.length; j++){
-            channel.send(outputString[j]);
+        for(let k = 0; k < outputString.length; k++){
+            channel.send(outputString[k]);
         }
     }
 }
