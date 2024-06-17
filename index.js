@@ -446,16 +446,29 @@ const allTopTopics = function(channel){
     for(let i = 0; i < points.length; i++){
 
         let topics = top.filter(t => t[1] == points[i])
-        let outputString = " - " + topics[0][0];
+        let outputString = [" - " + topics[0][0]];
 
         // Concat all the topics with this score as a bullet pointed list
+        let offset = 0;
+
         if(topics.length > 1){
             for(let j = 1; j < topics.length; j++){
-                outputString = outputString.concat("\n- ", topics[j][0]);
+
+                // Batch the messages into sizes of 10 topics
+                if (j%10 == 1){
+                    offset = offset + 1;
+                    outputString[offset] = [" - " + topics[j][0]];
+                }
+                else {
+                    outputString[offset] = outputString[offset].concat("\n- ", topics[j][0]);
+                }
             }
         }
         
+        // Output the messages to discord
         channel.send(`**Rank #${i+1} with a score of ${points[i]}:**`);
-        channel.send(outputString);
+        for(let j = 0; j < outputString.length; j++){
+            channel.send(outputString[j]);
+        }
     }
 }
