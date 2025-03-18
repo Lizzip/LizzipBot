@@ -85,11 +85,7 @@ module.exports = {
         }
     },
     topicExists: function(topic){
-        // TODO: Use a string normalizer
-        topic = topic.replace(/”/g, '\"');
-        topic = topic.replace(/“/g, '\"');
-        topic = topic.replace(/’/g, '\'');
-        
+       
         // Open the topic file and store all topics in an array
         let allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
         for(let i = 0; i < allTopics.length; i++){
