@@ -67,7 +67,7 @@ module.exports = {
 
         // Read the entire topic dump file line by line
         fs.readFileSync(dumpLoc, 'utf-8').split(/\r?\n/).forEach(function(line){
-            if(line.includes(searchString)){
+            if(line.toLowerCase().includes(searchString.toLowerCase())){
                 matches.push(line);
             }
         })
