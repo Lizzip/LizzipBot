@@ -84,12 +84,24 @@ module.exports = {
             }
         }
     },
+    replaceTopicQuotes: function(topic){
+        topic = topic.replace(/”/g, '\"');
+        topic = topic.replace(/“/g, '\"');
+        topic = topic.replace(/’/g, '\'');
+
+        return topic;
+    },
     topicExists: function(topic){
-       
+               
         // Open the topic file and store all topics in an array
         let allTopics = fs.readFileSync(dumpLoc).toString().split("\n");
         for(let i = 0; i < allTopics.length; i++){
             allTopics[i] = Buffer.from(allTopics[i], 'utf-8').toString();
+        }
+
+        // If topic could not be found, try converting quotes 
+        if(allTopics.indexOf(topic) == -1){
+            topic = this.replaceTopicQuotes(topic);
         }
         
         return allTopics.indexOf(topic);
@@ -104,6 +116,11 @@ module.exports = {
             let splitComma = allRankings[i].lastIndexOf(',')
             allRankings[i] = allRankings[i].substring(0, splitComma);
             allRankings[i] = Buffer.from(allRankings[i], 'utf-8').toString();
+        }
+
+        // If topic could not be found, try converting quotes 
+        if(allRankings.indexOf(topic) == -1){
+            topic = this.replaceTopicQuotes(topic);
         }
     
         return allRankings.indexOf(topic);
