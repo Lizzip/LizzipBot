@@ -104,6 +104,20 @@ discClient.on('messageCreate', message => {
             }
         }
     }
+
+
+    // Mum check
+    const lower = msg.replace("'", "").replace("’", "");
+    const matches = ["lizzips mum", "lizzip mum", "lizips mum"];
+    let match = false;
+    
+    for (let i = 0; i < matches.length; i++){
+        if(lower.includes(matches[i])) match = true;
+    }
+
+    if(match){
+        message.react('<:oi:1377241125706010774>')
+    }
 });
 
 
