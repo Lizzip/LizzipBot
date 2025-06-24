@@ -57,7 +57,7 @@ module.exports = {
                 }
                 
                 // Output the batches to Discord
-                sections.forEach(s => `- ${message.channel.send(s.join('\n -'))}`);
+                sections.forEach(s => message.channel.send(`- ${s.join('\n - ')}`));
             }
             else message.channel.send("Nah, nothing of the sort found");
         }
