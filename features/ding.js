@@ -8,13 +8,13 @@ const {MessageAttachment} = require('discord.js');
 // Load config
 const configData = fs.readFileSync("./config.json");
 const config = JSON.parse(configData);
-const dingBlog = config.tumblr.blog;
+const dingBlog = config.tumblr.ding.blog;
 
 const tumblrClient = tumblr.createClient({
-    consumer_key: config.tumblr.consumer_key,
-    consumer_secret: config.tumblr.consumer_secret,
-    token: config.tumblr.token,
-    token_secret: config.tumblr.token_secret
+    consumer_key: config.tumblr.ding.consumer_key,
+    consumer_secret: config.tumblr.ding.consumer_secret,
+    token: config.tumblr.ding.token,
+    token_secret: config.tumblr.ding.token_secret
 });
 
 // Load the template images and the font
@@ -74,7 +74,7 @@ module.exports = {
             console.log(response);
     
             if(!err){
-                channel.send(`Ding posted to https://${config.tumblr.blog}`); 
+                channel.send(`Ding posted to https://${config.tumblr.ding.blog}`); 
             }
         });
     },

@@ -1,6 +1,7 @@
 'use strict'
 const fs = require("fs");
 const https = require('https');
+const tumblr = require('tumblr.js');
 
 // Load config
 const configData = fs.readFileSync("./config.json");
@@ -16,6 +17,14 @@ const ircClient = new irc.Client(config.irc.server, config.irc.username, {
 });
 ircClient.addListener('error', message => console.log('error: ', message));
 
+// Setup Tumblr
+const topicBlog = config.tumblr.topic.blog;
+const tumblrClient = tumblr.createClient({
+    consumer_key: config.tumblr.topic.consumer_key,
+    consumer_secret: config.tumblr.topic.consumer_secret,
+    token: config.tumblr.topic.token,
+    token_secret: config.tumblr.topic.token_secret
+});
 
 module.exports = {
     helpText: function(){
@@ -26,12 +35,31 @@ module.exports = {
         return matches.some(x => msg.startsWith(x));
     },
     doTask: function(msg, message){
-        // Set a topic in IRC
+        
         if(msg.startsWith("/topic ")){
             let t = message.content;
             t = t.substring(6).trim();
+
+            // Set a topic in IRC
             ircClient.send('TOPIC', ircChannel, t);
             console.log("setting topic: ", t);
+
+            // Send the topic to Tumblr
+            const dt = new Date().toString().replace(/T/, ' ').replace(/\.\w*/, '');
+
+            let params = {
+                'title': t,
+                'body': `This topic was set at ${dt}`
+            }
+
+            tumblrClient.createTextPost(topicBlog, params, (err, response) => {
+                console.log(err);
+                console.log(response);
+        
+                if(!err){
+                    message.channel.send(`Topic tumbld at https://${topicBlog} and not fuckin tooted until I find a new Masto home.`); 
+                }
+            });
 
             // Wait for 3 seconds then download the full topics dump txt
             const self = this;
