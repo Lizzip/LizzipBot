@@ -53,11 +53,8 @@ module.exports = {
             }
 
             tumblrClient.createTextPost(topicBlog, params, (err, response) => {
-                console.log(err);
-                console.log(response);
-        
-                if(!err){
-                    message.channel.send(`Topic tumbld at https://${topicBlog} and not fuckin tooted until I find a new Masto home.`); 
+                if (err) {
+                    console.log(err)
                 }
             });
 
