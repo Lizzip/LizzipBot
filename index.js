@@ -137,14 +137,8 @@ discClient.on('messageReactionAdd', (reaction, user) => {
         console.log("Topic emoji count: ", topicCount)
     }
 
-    if(name === "topic" && topicCount == 1){
-        let t = removeUsername(reaction.message.content);
-        t = t.trim();
-        let msg = `/topic ${t}`;
-        parseMessage(msg, {'content': msg});
-    }
-
-    if(name == '🏆' || (name === "topic" && topicCount > 1)){
+    if((name === "topic" && topicCount == 1) || 
+       (name == '🏆' || (name === "topic" && topicCount > 1))){
         let t = removeUsername(reaction.message.content);
         t = t.trim();
         t = t.replace("/topic ", '');
@@ -152,8 +146,14 @@ discClient.on('messageReactionAdd', (reaction, user) => {
         t = t.replace(".topic ", '');
         t = t.replace(".point ", '');
 
-        let msg = `/point ${t}`;
-        parseMessage(msg, {'content': msg});
+        if(name === "topic" && topicCount == 1){
+            let msg = `/topic ${t}`;
+            parseMessage(msg, {'content': msg});
+        }
+        else {
+            let msg = `/point ${t}`;
+            parseMessage(msg, {'content': msg});
+        }
     }
 });
 discClient.login(discordToken);
