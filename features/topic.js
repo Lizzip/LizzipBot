@@ -45,7 +45,7 @@ module.exports = {
             console.log("setting topic: ", t);
 
             // Send the topic to Tumblr
-            const dt = new Date().toString().replace(/T/, ' ').replace(/\(\d)T(\d)/, '');
+            const dt = new Date().toString()//.replace(/T/, ' ').replace(/(\d)T(\d)/, '');
 
             let params = {
                 'title': t,
